@@ -280,10 +280,9 @@
             box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
         }
 
-        .text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9);
-
-        .管理列 { display: none; }
-        body.编辑模式 .管理列 { display: table-cell; }
+        /* 隐藏控制列样式规则（!important 确保不受其他样式意外覆盖） */
+        .管理列 { display: none !important; }
+        body.编辑模式 .管理列 { display: table-cell !important; }
 
         /* 调整管理框宽度与对齐，保证100px内不换行 */
         .管理格 { 
@@ -599,6 +598,7 @@
         }
 
         function 添加行() {
+            if (!是否编辑模式) return; // 逻辑锁加固
             // 新增契约使用指定的默认占位图链接
             内存数据.push({ 立绘: 'https://via.placeholder.com/60', 姓名: '无名之辈', 职位: '异乡人', 动机: '被迷宫吸引', 备注: '尚无记载...' });
             渲染表格();
@@ -606,6 +606,7 @@
         }
 
         function 删除NPC(idx) {
+            if (!是否编辑模式) return; // 逻辑锁加固
             if (confirm("将其从存在中抹除？")) {
                 if (prompt("执行密令:") === 密码) {
                     内存数据.splice(idx, 1);
@@ -618,6 +619,7 @@
         }
 
         function 移动位次(index, step) {
+            if (!是否编辑模式) return; // 逻辑锁加固
             const newIndex = index + step;
             if (newIndex >= 0 && newIndex < 内存数据.length) {
                 [内存数据[index], 内存数据[newIndex]] = [内存数据[newIndex], 内存数据[index]];
@@ -628,6 +630,7 @@
 
         // --- 名词录逻辑 ---
         function 打开名词弹窗() {
+            if (!是否编辑模式) return; // 逻辑锁加固
             document.getElementById('名词输入区').value = 专有名词内容;
             document.getElementById('名词弹窗').style.display = 'flex';
         }
@@ -644,6 +647,7 @@
         }
 
         async function 保存到云端() {
+            if (!是否编辑模式) return; // 逻辑锁加固
             if (prompt("阴谋论法师需要记号") !== 密码) {
                 打开警告弹窗();
                 return;
@@ -662,7 +666,11 @@
         }
 
         // --- 影像处理 ---
-        function 打开更图弹窗(index) { 当前编辑索引 = index; document.getElementById('更图弹窗').style.display = 'flex'; }
+        function 打开更图弹窗(index) { 
+            if (!是否编辑模式) return; // 逻辑锁加固
+            当前编辑索引 = index; 
+            document.getElementById('更图弹窗').style.display = 'flex'; 
+        }
         function 关闭更图弹窗() { document.getElementById('更图弹窗').style.display = 'none'; }
         
         function 确定网址() {
@@ -692,7 +700,7 @@
         document.getElementById('隐藏上传').onchange = (e) => 执行上传(e.target.files[0]);
 
         document.addEventListener('paste', (e) => {
-            if (document.getElementById('停图弹窗')?.style.display === 'flex' || document.getElementById('更图弹窗').style.display === 'flex') {
+            if (document.getElementById('更图弹窗').style.display === 'flex') {
                 const items = (e.clipboardData || e.originalEvent.clipboardData).items;
                 for (let item of items) { if (item.type.indexOf("image") !== -1) 执行上传(item.getAsFile()); }
             }
