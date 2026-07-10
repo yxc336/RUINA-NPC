@@ -648,3 +648,76 @@
                 打开警告弹窗();
                 return;
             }
+            更新状态("正在向世界树祈祷...");
+            try {
+                // 使用指定的数据同步保存接口 (PUT)
+                await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY },
+                    body: JSON.stringify({ npcs: 内存数据, terms: 专有名词内容 })
+                });
+                设置未保存状态(false);
+                更新状态("祈祷完成，你的事迹已化为传说。");
+            } catch (e) { alert("存档破损，请重试！"); }
+        }
+
+        // --- 影像处理 ---
+        function 打开更图弹窗(index) { 当前编辑索引 = index; document.getElementById('更图弹窗').style.display = 'flex'; }
+        function 关闭更图弹窗() { document.getElementById('更图弹窗').style.display = 'none'; }
+        
+        function 确定网址() {
+            const url = document.getElementById('网址输入框').value.trim();
+            if (url) { 内存数据[当前编辑索引].立绘 = url; 渲染表格(); 设置未保存状态(true); 关闭更图弹窗(); }
+        }
+
+        async function 执行上传(file) {
+            if (!file) return;
+            关闭更图弹窗();
+            更新状态("正在将画片转化为以太幻影...");
+            try {
+                const formData = new FormData();
+                formData.append("image", file);
+                // 使用指定的图片上传接口
+                const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_BB_KEY}`, { method: "POST", body: formData });
+                const result = await res.json();
+                if (result.success) {
+                    内存数据[当前编辑索引].立绘 = result.data.url;
+                    渲染表格();
+                    设置未保存状态(true);
+                    更新状态("幻影具现化成功。");
+                }
+            } catch (err) { alert("具现化失败，请检查网络共鸣。"); }
+        }
+
+        document.getElementById('隐藏上传').onchange = (e) => 执行上传(e.target.files[0]);
+
+        document.addEventListener('paste', (e) => {
+            if (document.getElementById('停图弹窗')?.style.display === 'flex' || document.getElementById('更图弹窗').style.display === 'flex') {
+                const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+                for (let item of items) { if (item.type.indexOf("image") !== -1) 执行上传(item.getAsFile()); }
+            }
+        });
+
+        function 预览图片(s) { document.getElementById("预览图").src = s; document.getElementById("放大预览").style.display = 'flex'; }
+
+        function 导出备份() {
+            const blob = new Blob([JSON.stringify({ npcs: 内存数据, terms: 专有名词内容 }, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `手记断章_${new Date().toLocaleDateString()}.json`;
+            a.click();
+        }
+
+        function 触发导入() { document.getElementById("导入框").click(); }
+        function 导入备份(e) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const data = JSON.parse(ev.target.result);
+                if (data.npcs) { 内存数据 = data.npcs; 专有名词内容 = data.terms; } else { 内存数据 = data; }
+                渲染表格(); 设置未保存状态(true);
+            };
+            reader.readAsText(e.target.files[0]);
+        }
+    </script>
+</body>
+</html>
